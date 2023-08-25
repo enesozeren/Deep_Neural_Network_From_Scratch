@@ -24,8 +24,8 @@ class DNN:
             cost_val = self.cost(predictions, Y)
             
             # Backpropagation for calculating gradients and updating parameters
-            grads = self.backward_prop(forward_vars, cost_val)
-            parameters = self.update_parameters(learning_rate, grads)
+            gradients = self.backward_prop(parameters, forward_vars, Y)
+            parameters = self.update_parameters(parameters, gradients, learning_rate)
 
         self.learned_parameters = parameters
 
@@ -50,13 +50,32 @@ class DNN:
 
         for l in range(1, len(self.layer_dims)):
             forward_vars["Z"+str(l)] = np.dot(parameters["W"+str(l)], forward_vars["A"+str(l-1)]) + parameters["b"+str(l)]
-            forward_vars["A"+str(l)] = self.sigmoid(forward_vars["Z"+str(l)])
+            
+            # As Activation Function: Apply relu in hidden layers, sigmoid in the output layer
+            if l < len(self.layer_dims) - 1:
+                forward_vars["A"+str(l)] = self.relu(forward_vars["Z"+str(l)])
+            else:
+                forward_vars["A"+str(l)] = self.sigmoid(forward_vars["Z"+str(l)])
 
         return forward_vars
 
-    def backward_prop(self):
+    def backward_prop(self, parameters, forward_vars, Y):
         """Propagate backward in the network with calculating gradients"""
-        pass
+        gradients = {}
+
+        L = len(self.layer_dims) - 1
+
+        for l in range(len(self.layer_dims)-1, 0, -1):
+            if l == L:
+                gradients["dA"+str(l)] = -np.divide(Y, parameters["A"+str(l)]) + np.divide((1-Y), (1-parameters["A"+str(l)]))
+            else:
+                gradients["dA"+str(l)]
+
+            gradients["dZ"+str(l)]
+            gradients["dW"+str(l)]
+            gradients["db"+str(l)]
+
+        return gradients
 
     def cost(self, Y_hat, Y):
         """Cross Entropy Loss is applied as Cost (Emprical Risk) """
@@ -65,9 +84,17 @@ class DNN:
 
         return cost_value
 
-    def update_parameters(self, learning_rate, grads):
+    def update_parameters(self, parameters, gradients, learning_rate):
         """Update parameters with gradients"""
-        pass
+        
+        for l in range(1, len(self.layer_dims)):
+            parameters["W"+str(l)] -= learning_rate * gradients["dW"+str(l)]
+            parameters["b"+str(l)] -= learning_rate * gradients["db"+str(l)]
+
+        return parameters
 
     def sigmoid(self, Z):
         return 1 / (1 + np.exp(-Z))
+    
+    def relu(self, Z):
+        return np.maximum(0, Z)
