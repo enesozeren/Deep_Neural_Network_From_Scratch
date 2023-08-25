@@ -6,7 +6,7 @@ class DNN:
     Optimization: Gradient Descent Algorithm
     """
     def __init__(self) -> None:
-        pass
+        self.cost_during_training = []
 
     def train(self, X, Y, layer_dims, epoch=1_000, learning_rate=0.001):
         """Train the neural network with given parameters and data X, Y"""
@@ -22,6 +22,7 @@ class DNN:
 
             # Cost function is applied
             cost_val = self.cost(predictions, Y)
+            self.cost_during_training.append(cost_val)
             
             # Backpropagation for calculating gradients and updating parameters
             gradients = self.backward_prop(parameters, forward_vars, Y)
@@ -31,7 +32,11 @@ class DNN:
 
     def predict(self, X):
         """Predict labels for given data X"""
-        pass
+        
+        forward_vars = self.forward_prop(self.learned_parameters, X)
+        L = len(self.layer_dims) - 1
+
+        return forward_vars["A"+str(L)]
 
     def initialize_parameters(self):
         """Initialize parameters with He initialization method"""
@@ -66,14 +71,18 @@ class DNN:
         L = len(self.layer_dims) - 1
 
         for l in range(len(self.layer_dims)-1, 0, -1):
+            m = forward_vars["A"+str(l-1)].shape[1]
             if l == L:
-                gradients["dA"+str(l)] = -np.divide(Y, parameters["A"+str(l)]) + np.divide((1-Y), (1-parameters["A"+str(l)]))
+                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
+                sigmoid_derivative = self.sigmoid(forward_vars["Z"+str(l)]) * (1 - self.sigmoid(forward_vars["Z"+str(l)]))
+                gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
             else:
-                gradients["dA"+str(l)]
-
-            gradients["dZ"+str(l)]
-            gradients["dW"+str(l)]
-            gradients["db"+str(l)]
+                relu_derivative = (self.relu(forward_vars["Z"+str(l)])) > 0
+                gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], relu_derivative)
+            
+            gradients["dW"+str(l)] = (1/m) * np.dot(gradients["dZ"+str(l)], forward_vars["A"+str(l-1)].T)
+            gradients["db"+str(l)] = (1/m) * np.sum(gradients["dZ"+str(l)], axis=1, keepdims=True)
+            gradients["dA"+str(l-1)] = np.dot(parameters["W"+str(l)].T, gradients["dZ"+str(l)])
 
         return gradients
 
