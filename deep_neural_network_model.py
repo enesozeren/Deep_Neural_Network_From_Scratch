@@ -8,7 +8,7 @@ class DNN:
     def __init__(self) -> None:
         self.cost_during_training = []
 
-    def train(self, X, Y, layer_dims, epoch=1_000, learning_rate=0.001):
+    def train(self, X, Y, layer_dims, epoch=10_000, learning_rate=0.001):
         """Train the neural network with given parameters and data X, Y"""
 
         layer_dims.insert(0, X.shape[0])
@@ -16,6 +16,9 @@ class DNN:
         parameters = self.initialize_parameters()
 
         for i in range(epoch):
+            # Mini Batch
+            # X, Y = self.get_minibatch(X, Y)
+
             # Forward prop and output of the last layer
             forward_vars = self.forward_prop(parameters, X)
             predictions = forward_vars["A"+str(len(layer_dims)-1)]
@@ -107,3 +110,6 @@ class DNN:
     
     def relu(self, Z):
         return np.maximum(0, Z)
+    
+    def get_minibatch(self):
+        pass
