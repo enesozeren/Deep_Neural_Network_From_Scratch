@@ -6,18 +6,19 @@ class DNN:
     Optimization: Gradient Descent Algorithm
     """
     def __init__(self) -> None:
+        self.epsilon = 1e-10
         self.cost_during_training = []
 
-    def train(self, X, Y, layer_dims, epoch=10_000, learning_rate=0.001):
+    def train(self, X_train, Y_train, layer_dims, epoch=10_000, learning_rate=0.001):
         """Train the neural network with given parameters and data X, Y"""
 
-        layer_dims.insert(0, X.shape[0])
+        layer_dims.insert(0, X_train.shape[0])
         self.layer_dims = layer_dims
         parameters = self.initialize_parameters()
 
         for i in range(epoch):
-            # Mini Batch
-            # X, Y = self.get_minibatch(X, Y)
+            # Mini Batch Samples
+            X, Y = self.get_minibatch(X_train, Y_train)
 
             # Forward prop and output of the last layer
             forward_vars = self.forward_prop(parameters, X)
@@ -76,7 +77,8 @@ class DNN:
         for l in range(len(self.layer_dims)-1, 0, -1):
             m = forward_vars["A"+str(l-1)].shape[1]
             if l == L:
-                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
+                # gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
+                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]+self.epsilon) + np.divide((1-Y), (1-forward_vars["A"+str(l)]+self.epsilon))
                 sigmoid_derivative = self.sigmoid(forward_vars["Z"+str(l)]) * (1 - self.sigmoid(forward_vars["Z"+str(l)]))
                 gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
             else:
@@ -111,5 +113,13 @@ class DNN:
     def relu(self, Z):
         return np.maximum(0, Z)
     
-    def get_minibatch(self):
-        pass
+    def get_minibatch(self, X_train, Y_train):
+        """Return a minibatch sample"""
+
+        minibatch_size = 64
+        random_column_indices = np.random.choice(X_train.shape[1], minibatch_size, replace=False)
+
+        X = X_train[:, random_column_indices]
+        Y = Y_train[:, random_column_indices]
+
+        return X, Y
