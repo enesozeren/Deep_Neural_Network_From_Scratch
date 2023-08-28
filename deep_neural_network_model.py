@@ -6,7 +6,6 @@ class DNN:
     Optimization: Gradient Descent Algorithm
     """
     def __init__(self) -> None:
-        self.epsilon = 1e-10
         self.cost_during_training = []
 
     def train(self, X_train, Y_train, layer_dims, epoch=10_000, learning_rate=0.001):
@@ -47,7 +46,7 @@ class DNN:
         
         parameters = {}
         for l in range(1, len(self.layer_dims)):
-            parameters["W"+str(l)] = np.random.rand(self.layer_dims[l], self.layer_dims[l-1]) * np.sqrt(2/self.layer_dims[l-1])
+            parameters["W"+str(l)] = np.random.randn(self.layer_dims[l], self.layer_dims[l-1]) * np.sqrt(2/self.layer_dims[l-1])
             parameters["b"+str(l)] = np.zeros((self.layer_dims[l], 1))
 
         return parameters
@@ -78,7 +77,7 @@ class DNN:
             m = forward_vars["A"+str(l-1)].shape[1]
             if l == L:
                 # gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
-                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]+self.epsilon) + np.divide((1-Y), (1-forward_vars["A"+str(l)]+self.epsilon))
+                gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
                 sigmoid_derivative = self.sigmoid(forward_vars["Z"+str(l)]) * (1 - self.sigmoid(forward_vars["Z"+str(l)]))
                 gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
             else:
