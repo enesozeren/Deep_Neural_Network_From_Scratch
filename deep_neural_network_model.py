@@ -76,7 +76,6 @@ class DNN:
         for l in range(len(self.layer_dims)-1, 0, -1):
             m = forward_vars["A"+str(l-1)].shape[1]
             if l == L:
-                # gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
                 gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
                 sigmoid_derivative = self.sigmoid(forward_vars["Z"+str(l)]) * (1 - self.sigmoid(forward_vars["Z"+str(l)]))
                 gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
