@@ -8,7 +8,7 @@ class DNN:
     def __init__(self) -> None:
         self.cost_during_training = []
 
-    def train(self, X_train, Y_train, layer_dims, epoch=10_000, learning_rate=0.001, minibatch_size=64):
+    def train(self, X_train, Y_train, layer_dims, epoch=1_000, learning_rate=0.001, minibatch_size=64):
         """Train the neural network with given parameters and data X, Y"""
 
         layer_dims.insert(0, X_train.shape[0])
@@ -17,20 +17,26 @@ class DNN:
         self.minibatch_size = minibatch_size
 
         for i in range(epoch):
-            # Mini Batch Samples
-            X, Y = self.get_minibatch(X_train, Y_train)
+            for batch_idx in range(0, int(X_train.shape[1] / minibatch_size)):
+                # Mini Batch Samples
+                if batch_idx == int(X_train.shape[1] / minibatch_size):
+                    X = X_train[:, batch_idx*minibatch_size:]
+                    Y = Y_train[:, batch_idx*minibatch_size:]
+                else:
+                    X = X_train[:, batch_idx*minibatch_size: (batch_idx+1)*minibatch_size]
+                    Y = Y_train[:, batch_idx*minibatch_size: (batch_idx+1)*minibatch_size]
 
-            # Forward prop and output of the last layer
-            forward_vars = self.forward_prop(parameters, X)
-            predictions = forward_vars["A"+str(len(layer_dims)-1)]
+                # Forward prop and output of the last layer
+                forward_vars = self.forward_prop(parameters, X)
+                predictions = forward_vars["A"+str(len(layer_dims)-1)]
 
-            # Cost function is applied
-            cost_val = self.cost(predictions, Y)
-            self.cost_during_training.append(cost_val)
-            
-            # Backpropagation for calculating gradients and updating parameters
-            gradients = self.backward_prop(parameters, forward_vars, Y)
-            parameters = self.update_parameters(parameters, gradients, learning_rate)
+                # Cost function is applied
+                cost_val = self.cost(predictions, Y)
+                self.cost_during_training.append(cost_val)
+                
+                # Backpropagation for calculating gradients and updating parameters
+                gradients = self.backward_prop(parameters, forward_vars, Y)
+                parameters = self.update_parameters(parameters, gradients, learning_rate)
 
         self.learned_parameters = parameters
 
@@ -111,13 +117,3 @@ class DNN:
     
     def relu(self, Z):
         return np.maximum(0, Z)
-    
-    def get_minibatch(self, X_train, Y_train):
-        """Return a minibatch sample"""
-
-        random_column_indices = np.random.choice(X_train.shape[1], self.minibatch_size, replace=False)
-
-        X = X_train[:, random_column_indices]
-        Y = Y_train[:, random_column_indices]
-
-        return X, Y
