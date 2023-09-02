@@ -8,12 +8,13 @@ class DNN:
     def __init__(self) -> None:
         self.cost_during_training = []
 
-    def train(self, X_train, Y_train, layer_dims, epoch=10_000, learning_rate=0.001):
+    def train(self, X_train, Y_train, layer_dims, epoch=10_000, learning_rate=0.001, minibatch_size=64):
         """Train the neural network with given parameters and data X, Y"""
 
         layer_dims.insert(0, X_train.shape[0])
         self.layer_dims = layer_dims
         parameters = self.initialize_parameters()
+        self.minibatch_size = minibatch_size
 
         for i in range(epoch):
             # Mini Batch Samples
@@ -73,14 +74,14 @@ class DNN:
 
         L = len(self.layer_dims) - 1
 
-        for l in range(len(self.layer_dims)-1, 0, -1):
+        for l in range(L, 0, -1):
             m = forward_vars["A"+str(l-1)].shape[1]
             if l == L:
                 gradients["dA"+str(l)] = -np.divide(Y, forward_vars["A"+str(l)]) + np.divide((1-Y), (1-forward_vars["A"+str(l)]))
-                sigmoid_derivative = self.sigmoid(forward_vars["Z"+str(l)]) * (1 - self.sigmoid(forward_vars["Z"+str(l)]))
+                sigmoid_derivative = forward_vars["A"+str(l)] * (1 - forward_vars["A"+str(l)])
                 gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], sigmoid_derivative)
             else:
-                relu_derivative = (self.relu(forward_vars["Z"+str(l)])) > 0
+                relu_derivative = forward_vars["A"+str(l)] > 0
                 gradients["dZ"+str(l)] = np.multiply(gradients["dA"+str(l)], relu_derivative)
             
             gradients["dW"+str(l)] = (1/m) * np.dot(gradients["dZ"+str(l)], forward_vars["A"+str(l-1)].T)
@@ -114,8 +115,7 @@ class DNN:
     def get_minibatch(self, X_train, Y_train):
         """Return a minibatch sample"""
 
-        minibatch_size = 64
-        random_column_indices = np.random.choice(X_train.shape[1], minibatch_size, replace=False)
+        random_column_indices = np.random.choice(X_train.shape[1], self.minibatch_size, replace=False)
 
         X = X_train[:, random_column_indices]
         Y = Y_train[:, random_column_indices]
